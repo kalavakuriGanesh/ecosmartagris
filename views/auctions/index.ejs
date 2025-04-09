@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Auctions - ECOSMARTAGRI</title>
+    <link rel="stylesheet" href="/styles/auctions.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2>Live Auctions</h2>
+            </div>
+            <% if (user.role === 'farmer') { %>
+            <div class="col text-end">
+                <a href="/auctions/create" class="btn btn-primary">Create New Auction</a>
+            </div>
+            <% } %>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <!-- Filter Section -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Filters</h5>
+                        <form id="filterForm">
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="upcoming" id="upcomingCheck">
+                                    <label class="form-check-label" for="upcomingCheck">Upcoming</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="active" id="activeCheck" checked>
+                                    <label class="form-check-label" for="activeCheck">Active</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="ended" id="endedCheck">
+                                    <label class="form-check-label" for="endedCheck">Ended</label>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Price Range</label>
+                                <div class="input-group mb-2">
+                                    <input type="number" class="form-control" placeholder="Min" id="minPrice">
+                                    <input type="number" class="form-control" placeholder="Max" id="maxPrice">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <!-- Auctions Grid -->
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="auctionsGrid">
+                    <% auctions.forEach(auction => { %>
+                    <div class="col">
+                        <div class="card h-100">
+                            <img src="/uploads/<%= auction.product.photo %>" class="card-img-top" alt="<%= auction.product.name %>">
+                            <div class="card-body">
+                                <h5 class="card-title"><%= auction.product.name %></h5>
+                                <p class="card-text">
+                                    Quantity: <%= auction.product.quantity %> <%= auction.product.unit %><br>
+                                    Current Bid: ₹<%= auction.currentPrice %><br>
+                                    Ends: <%= new Date(auction.endTime).toLocaleString() %>
+                                </p>
+                                <div class="d-grid">
+                                    <a href="/auctions/<%= auction._id %>" class="btn btn-primary">View Details</a>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <small class="text-muted">
+                                    <%= auction.bids.length %> bids • 
+                                    <%= auction.status %>
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <% }); %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('filterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Implement filter logic here
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,73 @@
+<main class="main-content">
+    <header class="header">
+        <h1>Welcome <%= user.name %>,</h1>
+        <p>Here's your overview for today.</p>
+    </header>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+        <% if (user.role === 'customer') { %>
+            <div class="stat-card">
+                <h3>Total Goods Bought</h3>
+                <% if (stats.totalBought && stats.totalBought.length > 0) { %>
+                    <div class="product-stats">
+                        <% stats.totalBought.forEach(item => { %>
+                            <div class="product-stat-item">
+                                <p><strong><%= item.productName %></strong></p>
+                                <p>Quantity: <%= item.quantity %></p>
+                                <p>Total Price: <%= item.totalPrice %></p>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <p>No goods bought yet</p>
+                <% } %>
+            </div>
+        <% } else if (user.role === 'farmer') { %>
+            <div class="stat-card">
+                <h3>Total Goods Sold</h3>
+                <% if (stats.totalSold && stats.totalSold.length > 0) { %>
+                    <div class="product-stats">
+                        <% stats.totalSold.forEach(item => { %>
+                            <div class="product-stat-item">
+                                <p><strong><%= item.productName %></strong></p>
+                                <p>Quantity: <%= item.quantity %></p>
+                                <p>Total Price: <%= item.totalPrice %></p>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <p>No goods sold yet</p>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</main>
+
+<style>
+    .stats-section {
+        margin: 20px 0;
+    }
+    .stat-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .product-stats {
+        margin-top: 15px;
+    }
+    .product-stat-item {
+        border-bottom: 1px solid #eee;
+        padding: 10px 0;
+    }
+    .product-stat-item:last-child {
+        border-bottom: none;
+    }
+    .product-stat-item p {
+        margin: 5px 0;
+    }
+    .product-stat-item strong {
+        color: #2c3e50;
+    }
+</style>

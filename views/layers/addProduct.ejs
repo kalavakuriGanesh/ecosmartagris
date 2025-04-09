@@ -1,0 +1,119 @@
+<main class="main-content">
+    <header class="header">
+        <h1>Add Product Details</h1>
+        <p>Fill out the form below to add a new product.</p>
+    </header>
+
+    <div class="main-board">
+        <section class="product-form">
+            <!-- Photo Preview -->
+            <div class="product-preview">
+                <img id="productPreview" src="/img/vegitable.png" alt="Product Preview">
+            </div>
+            
+            <!-- Form -->
+            <form action="/addproduct" method="POST" enctype="multipart/form-data" onsubmit="return validateForm(event)">
+                <!-- Choose Product Photo -->
+                <div class="prod-form-group">
+                    <label for="productPhoto">Product Photo</label>
+                    <input type="file" id="productPhoto" name="image" accept="image/*" required>
+                    <div id="imagePreview" class="image-preview"></div>
+                </div>
+
+                <!-- Product Name -->
+                <div class="prod-form-group">
+                    <label for="productName">Product Name</label>
+                    <input type="text" id="productName" name="name" placeholder="Enter product name" required minlength="3" maxlength="50">
+                </div>
+
+                <!-- Product Price -->
+                <div class="prod-form-group">
+                    <label for="productPrice">Product Price (/kg)</label>
+                    <input type="number" id="productPrice" name="price" placeholder="Enter product price" required min="0" step="0.01">
+                </div>
+
+                <!-- Product Total Quantity -->
+                <div class="prod-form-group">
+                    <label for="productQuantity">Total Quantity (kg)</label>
+                    <input type="number" id="productQuantity" name="quantity" placeholder="Enter total quantity" required min="0" step="0.01">
+                </div>
+
+                <!-- Product Location -->
+                <div class="prod-form-group">
+                    <label for="productLocation">Location</label>
+                    <input type="text" id="productLocation" name="location" placeholder="Enter Location" required>
+                </div>
+
+                <!-- Product Description -->
+                <div class="prod-form-group">
+                    <label for="productDescription">Product Description</label>
+                    <textarea id="productDescription" name="description" rows="4" placeholder="Enter product description" required minlength="10" maxlength="500"></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="prod-form-group">
+                    <button type="submit" class="submit-btn">Add Product</button>
+                </div>
+            </form>
+        </section>
+    </div>
+</main>
+<script>
+    function validateForm(event) {
+        const price = document.getElementById('productPrice').value;
+        const quantity = document.getElementById('productQuantity').value;
+        const image = document.getElementById('productPhoto').files[0];
+        
+        if (price <= 0) {
+            alert('Price must be greater than 0');
+            event.preventDefault();
+            return false;
+        }
+        
+        if (quantity <= 0) {
+            alert('Quantity must be greater than 0');
+            event.preventDefault();
+            return false;
+        }
+        
+        if (image && image.size > 5 * 1024 * 1024) { // 5MB limit
+            alert('Image size must be less than 5MB');
+            event.preventDefault();
+            return false;
+        }
+        
+        return true;
+    }
+
+    document.getElementById("productPhoto").addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById("productPreview").src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        } else {
+            document.getElementById("productPreview").src = "/img/vegitable.png";
+        }
+    });
+
+    // Image preview
+    document.getElementById('productPhoto').addEventListener('change', function(e) {
+        const preview = document.getElementById('imagePreview');
+        preview.innerHTML = '';
+        
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '200px';
+                img.style.maxHeight = '200px';
+                preview.appendChild(img);
+            }
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+</script>

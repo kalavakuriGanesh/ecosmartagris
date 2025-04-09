@@ -1,0 +1,321 @@
+<!-- Settings Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>System Settings</h4>
+</div>
+
+<!-- Settings Tabs -->
+<ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general" type="button" role="tab">
+            <i class="fas fa-cog"></i> General Settings
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#email" type="button" role="tab">
+            <i class="fas fa-envelope"></i> Email Settings
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button" role="tab">
+            <i class="fas fa-shield-alt"></i> Security Settings
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="notifications-tab" data-bs-toggle="tab" data-bs-target="#notifications" type="button" role="tab">
+            <i class="fas fa-bell"></i> Notification Settings
+        </button>
+    </li>
+</ul>
+
+<!-- Settings Content -->
+<div class="tab-content" id="settingsTabsContent">
+    <!-- General Settings -->
+    <div class="tab-pane fade show active" id="general" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form id="generalSettingsForm">
+                    <div class="mb-3">
+                        <label class="form-label">Site Name</label>
+                        <input type="text" class="form-control" name="siteName" value="<%= settings.siteName %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Site Description</label>
+                        <textarea class="form-control" name="siteDescription" rows="3"><%= settings.siteDescription %></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Email</label>
+                        <input type="email" class="form-control" name="contactEmail" value="<%= settings.contactEmail %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Phone</label>
+                        <input type="tel" class="form-control" name="contactPhone" value="<%= settings.contactPhone %>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" name="address" rows="2"><%= settings.address %></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Currency</label>
+                        <select class="form-select" name="currency" required>
+                            <option value="USD" <%= settings.currency === 'USD' ? 'selected' : '' %>>USD ($)</option>
+                            <option value="EUR" <%= settings.currency === 'EUR' ? 'selected' : '' %>>EUR (€)</option>
+                            <option value="GBP" <%= settings.currency === 'GBP' ? 'selected' : '' %>>GBP (£)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Time Zone</label>
+                        <select class="form-select" name="timezone" required>
+                            <option value="UTC" <%= settings.timezone === 'UTC' ? 'selected' : '' %>>UTC</option>
+                            <option value="EST" <%= settings.timezone === 'EST' ? 'selected' : '' %>>EST</option>
+                            <option value="PST" <%= settings.timezone === 'PST' ? 'selected' : '' %>>PST</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date Format</label>
+                        <select class="form-select" name="dateFormat" required>
+                            <option value="MM/DD/YYYY" <%= settings.dateFormat === 'MM/DD/YYYY' ? 'selected' : '' %>>MM/DD/YYYY</option>
+                            <option value="DD/MM/YYYY" <%= settings.dateFormat === 'DD/MM/YYYY' ? 'selected' : '' %>>DD/MM/YYYY</option>
+                            <option value="YYYY-MM-DD" <%= settings.dateFormat === 'YYYY-MM-DD' ? 'selected' : '' %>>YYYY-MM-DD</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save General Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Settings -->
+    <div class="tab-pane fade" id="email" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form id="emailSettingsForm">
+                    <div class="mb-3">
+                        <label class="form-label">SMTP Host</label>
+                        <input type="text" class="form-control" name="smtpHost" value="<%= settings.smtpHost %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">SMTP Port</label>
+                        <input type="number" class="form-control" name="smtpPort" value="<%= settings.smtpPort %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">SMTP Username</label>
+                        <input type="text" class="form-control" name="smtpUsername" value="<%= settings.smtpUsername %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">SMTP Password</label>
+                        <input type="password" class="form-control" name="smtpPassword" placeholder="Enter new password or leave empty to keep current">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">From Email</label>
+                        <input type="email" class="form-control" name="fromEmail" value="<%= settings.fromEmail %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">From Name</label>
+                        <input type="text" class="form-control" name="fromName" value="<%= settings.fromName %>" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="useSSL" <%= settings.useSSL ? 'checked' : '' %>>
+                            <label class="form-check-label">Use SSL/TLS</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Email Settings</button>
+                    <button type="button" class="btn btn-info" onclick="testEmailSettings()">Test Email Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Settings -->
+    <div class="tab-pane fade" id="security" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form id="securitySettingsForm">
+                    <div class="mb-3">
+                        <label class="form-label">Session Timeout (minutes)</label>
+                        <input type="number" class="form-control" name="sessionTimeout" value="<%= settings.sessionTimeout %>" min="5" max="1440" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Maximum Login Attempts</label>
+                        <input type="number" class="form-control" name="maxLoginAttempts" value="<%= settings.maxLoginAttempts %>" min="1" max="10" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Lockout Duration (minutes)</label>
+                        <input type="number" class="form-control" name="lockoutDuration" value="<%= settings.lockoutDuration %>" min="5" max="1440" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="require2FA" <%= settings.require2FA ? 'checked' : '' %>>
+                            <label class="form-check-label">Require Two-Factor Authentication</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="enableCSRF" <%= settings.enableCSRF ? 'checked' : '' %>>
+                            <label class="form-check-label">Enable CSRF Protection</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="secureCookies" <%= settings.secureCookies ? 'checked' : '' %>>
+                            <label class="form-check-label">Use Secure Cookies</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Security Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Settings -->
+    <div class="tab-pane fade" id="notifications" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <form id="notificationSettingsForm">
+                    <h6 class="mb-3">Email Notifications</h6>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="notifyNewOrders" <%= settings.notifyNewOrders ? 'checked' : '' %>>
+                            <label class="form-check-label">New Orders</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="notifyOrderUpdates" <%= settings.notifyOrderUpdates ? 'checked' : '' %>>
+                            <label class="form-check-label">Order Status Updates</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="notifyNewUsers" <%= settings.notifyNewUsers ? 'checked' : '' %>>
+                            <label class="form-check-label">New User Registrations</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="notifyNewFarmers" <%= settings.notifyNewFarmers ? 'checked' : '' %>>
+                            <label class="form-check-label">New Farmer Applications</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="notifyLowStock" <%= settings.notifyLowStock ? 'checked' : '' %>>
+                            <label class="form-check-label">Low Stock Alerts</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Notification Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// General Settings Form
+document.getElementById('generalSettingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    try {
+        const response = await fetch('/admin/updateGeneralSettings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        if (!response.ok) throw new Error('Failed to update general settings');
+
+        showSuccess('General settings updated successfully');
+    } catch (error) {
+        console.error('Error updating general settings:', error);
+        showError('Failed to update general settings. Please try again.');
+    }
+});
+
+// Email Settings Form
+document.getElementById('emailSettingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    try {
+        const response = await fetch('/admin/updateEmailSettings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        if (!response.ok) throw new Error('Failed to update email settings');
+
+        showSuccess('Email settings updated successfully');
+    } catch (error) {
+        console.error('Error updating email settings:', error);
+        showError('Failed to update email settings. Please try again.');
+    }
+});
+
+// Security Settings Form
+document.getElementById('securitySettingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    try {
+        const response = await fetch('/admin/updateSecuritySettings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        if (!response.ok) throw new Error('Failed to update security settings');
+
+        showSuccess('Security settings updated successfully');
+    } catch (error) {
+        console.error('Error updating security settings:', error);
+        showError('Failed to update security settings. Please try again.');
+    }
+});
+
+// Notification Settings Form
+document.getElementById('notificationSettingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+
+    try {
+        const response = await fetch('/admin/updateNotificationSettings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        if (!response.ok) throw new Error('Failed to update notification settings');
+
+        showSuccess('Notification settings updated successfully');
+    } catch (error) {
+        console.error('Error updating notification settings:', error);
+        showError('Failed to update notification settings. Please try again.');
+    }
+});
+
+// Test Email Settings
+async function testEmailSettings() {
+    try {
+        const response = await fetch('/admin/testEmailSettings', {
+            method: 'POST'
+        });
+
+        if (!response.ok) throw new Error('Failed to test email settings');
+
+        showSuccess('Test email sent successfully');
+    } catch (error) {
+        console.error('Error testing email settings:', error);
+        showError('Failed to send test email. Please check your email settings.');
+    }
+}
+</script> 

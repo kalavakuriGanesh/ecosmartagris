@@ -1,0 +1,36 @@
+<!-- admin dashboard -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+    <link rel="stylesheet" href="/styles/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+
+        <!-- Toggle Button -->
+        <button class="toggle-sidebar" id="toggleSidebar">☰</button>
+
+        <!-- Main Content Area -->
+         <% if (board === 'home') { %>
+            <%- include('layers/home') %>
+        <% } else if (board == 'users') { %>
+            <%- include('layers/users') %>
+        <% } else if (board == 'orders') { %>
+            <%- include('layers/orders') %>
+        <% } else if (board == 'farmers') { %>
+            <%- include('layers/farmers') %>
+        <% } %>
+    </div>
+    <script>
+        // JavaScript for Sidebar Toggle
+        document.getElementById("toggleSidebar").addEventListener("click", () => {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("open");
+        });
+    </script>
+</body>
+</html>

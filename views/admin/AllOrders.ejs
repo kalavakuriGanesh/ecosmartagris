@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>All Orders - Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/adminDashboard.css">
+  <style>
+    /* Background with blur effect */
+    body {
+      background: url('/images/bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      backdrop-filter: blur(5px);
+    }
+    
+    .container {
+      max-width: 95%;
+    }
+
+    /* Transparent Glassmorphism Card */
+    .table-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      overflow-x: auto;
+    }
+
+    /* Table Styling */
+    .table {
+      color: white;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .table th {
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      text-align: center;
+    }
+
+    .table td {
+      text-align: center;
+      vertical-align: middle;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Order Status Styling */
+    .status-pending {
+      background: rgba(255, 193, 7, 0.6);
+      color: black;
+      padding: 5px 10px;
+      border-radius: 10px;
+    }
+
+    .status-completed {
+      background: rgba(40, 167, 69, 0.6);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 10px;
+    }
+
+    .status-canceled {
+      background: rgba(220, 53, 69, 0.6);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 10px;
+    }
+
+    /* Buttons */
+    .btn {
+      border-radius: 20px;
+      padding: 5px 10px;
+    }
+
+    .btn-approve {
+      background: rgba(0, 255, 0, 0.6);
+      border: none;
+      color: white;
+    }
+
+    .btn-cancel {
+      background: rgba(255, 0, 0, 0.6);
+      border: none;
+      color: white;
+    }
+
+    .btn:hover {
+      filter: brightness(1.2);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container mt-4">
+    <h2 class="text-center text-white">All Orders</h2>
+    
+    <div class="table-container mt-4">
+      <table class="table table-hover table-responsive">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Product</th>
+            <th>Seller</th>
+            <th>Buyer</th>
+            <th>Quantity</th>
+            <th>Requested Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% orders.forEach(order => { %>
+            <tr>
+              <td><%= order._id %></td>
+              <td><%= order.product %></td>
+              <td><%= order.seller %></td>
+              <td><%= order.buyer %></td>
+              <td><%= order.quantity %></td>
+              <td><%= new Date(order.requested).toLocaleDateString() %></td>
+              <td>
+                <% if (order.status === "pending") { %>
+                  <span class="status-pending">Pending</span>
+                <% } else if (order.status === "completed") { %>
+                  <span class="status-completed">Completed</span>
+                <% } else { %>
+                  <span class="status-canceled">Canceled</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (order.status === "pending") { %>
+                  <button class="btn btn-approve" onclick="updateOrder('<%= order._id %>', 'completed')">Approve</button>
+                  <button class="btn btn-cancel" onclick="updateOrder('<%= order._id %>', 'canceled')">Cancel</button>
+                <% } else { %>
+                  <span>-</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function updateOrder(orderId, status) {
+      if (confirm(`Are you sure you want to mark this order as ${status}?`)) {
+        fetch(`/admin/updateOrder/${orderId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status })
+        }).then(() => {
+          window.location.reload();
+        }).catch(err => console.error(err));
+      }
+    }
+  </script>
+
+</body>
+</html>

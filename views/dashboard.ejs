@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/styles/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-message {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ff4444;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 1000;
+        }
+        .retailer-dashboard {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .welcome-banner {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .welcome-banner h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .welcome-banner p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-card i {
+            font-size: 24px;
+            color: #28a745;
+        }
+
+        .stat-info h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-info p {
+            margin: 5px 0 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .auction-filters {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 40px 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .search-box i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .auctions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .auction-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .auction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .auction-header h3 {
+            margin: 0;
+            font-size: 18px;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.upcoming {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .auction-info p {
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .auction-info i {
+            width: 20px;
+            color: #28a745;
+        }
+
+        .auction-time {
+            margin: 15px 0;
+            color: #666;
+        }
+
+        .countdown {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .bid-form {
+            margin: 15px 0;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .recent-bids {
+            margin-top: 20px;
+        }
+
+        .recent-bids h4 {
+            margin: 0 0 10px;
+            font-size: 16px;
+        }
+
+        .recent-bids ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .recent-bids li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .bid-amount {
+            font-weight: bold;
+            color: #28a745;
+        }
+
+        .bid-time {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .no-bids {
+            color: #666;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .no-auctions {
+            text-align: center;
+            padding: 50px 20px;
+            color: #666;
+        }
+
+        .no-auctions i {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .auction-filters {
+                flex-direction: column;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
+            .filter-buttons {
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
+
+            .auctions-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    <div class="error-message" id="errorMessage"></div>
+    
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <%- include('layers/sidebar') %>
+
+        <!-- Toggle Button -->
+        <button class="toggle-sidebar" id="toggleSidebar">☰</button>
+
+        <!-- Main Content Area -->
+         <% if (board === 'home') { %>
+            <% if (user.role === 'retailer') { %>
+                <div class="retailer-dashboard">
+                    <div class="welcome-banner">
+                        <h1>Welcome, <%= user.name %></h1>
+                        <p>Browse and bid on available auctions from farmers</p>
+                    </div>
+
+                    <div class="stats-overview">
+                        <div class="stat-card">
+                            <i class="fas fa-gavel"></i>
+                            <div class="stat-info">
+                                <h3>Total Bids</h3>
+                                <p><%= stats.biddingStats.totalBids %></p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-rupee-sign"></i>
+                            <div class="stat-info">
+                                <h3>Amount Bid</h3>
+                                <p>₹<%= stats.biddingStats.totalAmount.toLocaleString() %></p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-trophy"></i>
+                            <div class="stat-info">
+                                <h3>Auctions Won</h3>
+                                <p><%= stats.biddingStats.wonAuctions %></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="auction-filters">
+                        <div class="search-box">
+                            <input type="text" id="searchAuctions" placeholder="Search auctions..." onkeyup="filterAuctions()">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" onclick="filterByStatus('all')">All Auctions</button>
+                            <button class="filter-btn" onclick="filterByStatus('active')">Active</button>
+                            <button class="filter-btn" onclick="filterByStatus('upcoming')">Upcoming</button>
+                        </div>
+                    </div>
+
+                    <div class="auctions-grid">
+                        <% if (stats.auctions && stats.auctions.length > 0) { %>
+                            <% stats.auctions.forEach(auction => { %>
+                                <div class="auction-card" data-status="<%= auction.status %>">
+                                    <div class="auction-header">
+                                        <h3><%= auction.product.name %></h3>
+                                        <span class="status-badge <%= auction.status %>">
+                                            <%= auction.status.charAt(0).toUpperCase() + auction.status.slice(1) %>
+                                        </span>
+                                    </div>
+                                    <div class="auction-info">
+                                        <p><i class="fas fa-user-circle"></i> Farmer: <%= auction.farmerDetails.name %></p>
+                                        <p><i class="fas fa-map-marker-alt"></i> Location: <%= auction.farmerDetails.location || 'Not specified' %></p>
+                                        <p><i class="fas fa-box"></i> Quantity: <%= auction.product.quantity %> <%= auction.product.unit %></p>
+                                        <p><i class="fas fa-rupee-sign"></i> Current Price: ₹<%= auction.currentPrice.toLocaleString() %></p>
+                                        <p><i class="fas fa-arrow-up"></i> Min Increment: ₹<%= auction.minimumIncrement.toLocaleString() %></p>
+                                    </div>
+                                    <div class="auction-time">
+                                        <% if (auction.status === 'upcoming') { %>
+                                            <p><i class="fas fa-clock"></i> Starts in: <span class="countdown" data-time="<%= auction.startTime %>"></span></p>
+                                        <% } else if (auction.status === 'active') { %>
+                                            <p><i class="fas fa-hourglass-half"></i> Ends in: <span class="countdown" data-time="<%= auction.endTime %>"></span></p>
+                                        <% } %>
+                                    </div>
+                                    <% if (auction.status === 'active') { %>
+                                        <form class="bid-form" onsubmit="placeBid(event, '<%= auction._id %>')">
+                                            <div class="input-group">
+                                                <input type="number" name="bidAmount" min="<%= auction.currentPrice + auction.minimumIncrement %>" 
+                                                       step="1" required placeholder="Enter bid amount">
+                                                <button type="submit" class="btn btn-primary">Place Bid</button>
+                                            </div>
+                                            <small>Minimum bid: ₹<%= (auction.currentPrice + auction.minimumIncrement).toLocaleString() %></small>
+                                        </form>
+                                    <% } %>
+                                    <div class="recent-bids">
+                                        <h4>Recent Bids</h4>
+                                        <% if (auction.bids && auction.bids.length > 0) { %>
+                                            <ul>
+                                                <% auction.bids.slice().reverse().forEach(bid => { %>
+                                                    <li>
+                                                        <span class="bid-amount">₹<%= bid.amount.toLocaleString() %></span>
+                                                        <span class="bid-time"><%= new Date(bid.time).toLocaleString() %></span>
+                                                    </li>
+                                                <% }) %>
+                                            </ul>
+                                        <% } else { %>
+                                            <p class="no-bids">No bids yet</p>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        <% } else { %>
+                            <div class="no-auctions">
+                                <i class="fas fa-box-open"></i>
+                                <p>There are no active or upcoming auctions at the moment. Please check back later.</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            <% } else { %>
+                <%- include('layers/home') %>
+            <% } %>
+        <% } else if (board === 'profile') { %>
+            <%- include('layers/profile') %>
+        <% } else if (board === 'photo') { %>
+            <%- include('layers/photo') %>
+        <% } else if (board === 'product') { %>
+            <%- include('layers/product') %>
+        <% } else if (board === 'addProduct') { %>
+            <%- include('layers/addProduct') %>
+        <% } else if (board === 'ownProduct') { %>
+            <%- include('layers/ownProduct') %>
+        <% } else if (board === 'orders') { %>
+            <%- include('layers/orders') %>
+        <% } else if (board === 'request') { %>
+            <%- include('layers/request') %>
+        <% } else if (board === 'auction') { %>
+            <%- include('layers/auction') %>
+        <% } %>
+    </div>
+    <script>
+        // JavaScript for Sidebar Toggle
+        document.getElementById("toggleSidebar").addEventListener("click", () => {
+            const sidebar = document.getElementById("sidebar");
+            sidebar.classList.toggle("open");
+        });
+
+        // Loading state management
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const errorMessage = document.getElementById('errorMessage');
+
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+        }
+
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // Add loading states to all forms
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', () => {
+                showLoading();
+            });
+        });
+
+        // Handle network errors
+        window.addEventListener('offline', () => {
+            showError('You are offline. Please check your internet connection.');
+        });
+
+        // Handle API errors
+        window.addEventListener('unhandledrejection', (event) => {
+            showError('An error occurred. Please try again later.');
+            console.error('Unhandled promise rejection:', event.reason);
+        });
+
+        // Update countdowns every second
+        function updateCountdowns() {
+            document.querySelectorAll('.countdown').forEach(countdown => {
+                const targetTime = new Date(countdown.dataset.time).getTime();
+                const now = new Date().getTime();
+                const timeLeft = targetTime - now;
+
+                if (timeLeft <= 0) {
+                    countdown.textContent = 'Ended';
+                    return;
+                }
+
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                countdown.textContent = 
+                    (days > 0 ? days + 'd ' : '') +
+                    hours.toString().padStart(2, '0') + ':' +
+                    minutes.toString().padStart(2, '0') + ':' +
+                    seconds.toString().padStart(2, '0');
+            });
+        }
+
+        // Filter auctions by status
+        function filterByStatus(status) {
+            const cards = document.querySelectorAll('.auction-card');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.filter-btn[onclick="filterByStatus('${status}')"]`).classList.add('active');
+
+            cards.forEach(card => {
+                if (status === 'all' || card.dataset.status === status) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Search functionality
+        function filterAuctions() {
+            const searchText = document.getElementById('searchAuctions').value.toLowerCase();
+            const cards = document.querySelectorAll('.auction-card');
+            let hasVisibleCards = false;
+
+            cards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const farmer = card.querySelector('.auction-info p').textContent.toLowerCase();
+                if (title.includes(searchText) || farmer.includes(searchText)) {
+                    card.style.display = 'block';
+                    hasVisibleCards = true;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            const noAuctions = document.querySelector('.no-auctions');
+            if (!hasVisibleCards) {
+                if (!noAuctions) {
+                    const auctionsGrid = document.querySelector('.auctions-grid');
+                    auctionsGrid.insertAdjacentHTML('beforeend', `
+                        <div class="no-auctions">
+                            <i class="fas fa-search"></i>
+                            <p>No auctions found matching your search</p>
+                        </div>
+                    `);
+                }
+            } else if (noAuctions) {
+                noAuctions.remove();
+            }
+        }
+
+        // Place bid
+        async function placeBid(event, auctionId) {
+            event.preventDefault();
+            const form = event.target;
+            const amount = form.bidAmount.value;
+
+            try {
+                const response = await fetch(`/auctions/${auctionId}/bid`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ amount: parseFloat(amount) })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Failed to place bid');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to place bid');
+            }
+        }
+
+        // Initialize
+        updateCountdowns();
+        setInterval(updateCountdowns, 1000);
+    </script>
+</body>
+</html>

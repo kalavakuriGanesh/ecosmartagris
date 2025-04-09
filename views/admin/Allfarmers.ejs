@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>All Farmers - Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/styles/adminDashboard.css">
+  <style>
+    /* Background with blur effect */
+    body {
+      background: url('/images/bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      backdrop-filter: blur(5px);
+    }
+    
+    .container {
+      max-width: 95%;
+    }
+
+    /* Transparent Glassmorphism Card */
+    .table-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      overflow-x: auto;
+    }
+
+    /* Table Styling */
+    .table {
+      color: white;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .table th {
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      text-align: center;
+    }
+
+    .table td {
+      text-align: center;
+      vertical-align: middle;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .table img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .btn {
+      border-radius: 20px;
+      padding: 5px 10px;
+    }
+
+    .btn-edit {
+      background: rgba(0, 255, 0, 0.6);
+      border: none;
+      color: white;
+    }
+
+    .btn-delete {
+      background: rgba(255, 0, 0, 0.6);
+      border: none;
+      color: white;
+    }
+
+    .btn:hover {
+      filter: brightness(1.2);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container mt-4">
+    <h2 class="text-center text-white">All Farmers</h2>
+    
+    <div class="table-container mt-4">
+      <table class="table table-hover table-responsive">
+        <thead>
+          <tr>
+            <th>Photo</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% farmers.forEach(farmer => { %>
+            <tr>
+              <td>
+                <% if (farmer.photo) { %>
+                  <img src="<%= farmer.photo %>" alt="<%= farmer.name %>">
+                <% } else { %>
+                  <img src="/images/default-user.png" alt="Default User">
+                <% } %>
+              </td>
+              <td><%= farmer.name %></td>
+              <td><%= farmer.email %></td>
+              <td><%= farmer.phone %></td>
+              <td><%= farmer.address %></td>
+              <td><%= farmer.role %></td>
+              <td>
+                <button class="btn btn-edit" onclick="editFarmer('<%= farmer._id %>')">Edit</button>
+                <button class="btn btn-delete" onclick="confirmDelete('<%= farmer._id %>')">Delete</button>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function confirmDelete(farmerId) {
+      if (confirm("Are you sure you want to delete this farmer?")) {
+        window.location.href = `/admin/deleteFarmer/${farmerId}`;
+      }
+    }
+
+    function editFarmer(farmerId) {
+      window.location.href = `/admin/editFarmer/${farmerId}`;
+    }
+  </script>
+
+</body>
+</html>

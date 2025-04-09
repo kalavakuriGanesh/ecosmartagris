@@ -1,0 +1,331 @@
+<!-- Orders Management Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>Orders Management</h4>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="searchForm" class="row g-3">
+            <div class="col-md-3">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search orders...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="date" class="form-control" id="dateFilter">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Product</th>
+                        <th>Buyer</th>
+                        <th>Seller</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% orders.forEach(order => { %>
+                        <tr>
+                            <td><%= order._id %></td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <img src="<%= order.product && order.product.photo ? `/uploads/${order.product.photo}` : '/img/default-product.png' %>" 
+                                         alt="<%= order.product ? order.product.name : 'Product' %>"
+                                         class="img-thumbnail me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                    <%= order.product ? order.product.name : 'Unknown Product' %>
+                                </div>
+                            </td>
+                            <td><%= order.buyer ? order.buyer.name : 'Unknown Buyer' %></td>
+                            <td><%= order.seller ? order.seller.name : 'Unknown Seller' %></td>
+                            <td><%= order.quantity %> kg</td>
+                            <td>₹<%= order.product ? (order.product.price * order.quantity).toFixed(2) : '0.00' %></td>
+                            <td>
+                                <span class="badge bg-<%= order.status === 'completed' ? 'success' : 
+                                                    order.status === 'pending' ? 'warning' : 
+                                                    order.status === 'processing' ? 'info' :
+                                                    'danger' %>">
+                                    <%= order.status %>
+                                </span>
+                            </td>
+                            <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="viewOrderDetails('<%= order._id %>')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <% if (order.status === 'pending' || order.status === 'processing') { %>
+                                    <button class="btn btn-sm btn-success" onclick="updateOrderStatus('<%= order._id %>', 'completed')">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="updateOrderStatus('<%= order._id %>', 'cancelled')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Order Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Order ID:</th>
+                                <td id="orderId"></td>
+                            </tr>
+                            <tr>
+                                <th>Date:</th>
+                                <td id="orderDate"></td>
+                            </tr>
+                            <tr>
+                                <th>Status:</th>
+                                <td id="orderStatus"></td>
+                            </tr>
+                            <tr>
+                                <th>Total Amount:</th>
+                                <td id="orderTotal"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Product Information</h6>
+                        <div id="productInfo" class="d-flex align-items-center mb-3">
+                            <img id="productImage" class="img-thumbnail me-2" style="width: 60px; height: 60px; object-fit: cover;">
+                            <div>
+                                <h6 id="productName" class="mb-0"></h6>
+                                <small class="text-muted" id="productCategory"></small>
+                            </div>
+                        </div>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Price:</th>
+                                <td id="productPrice"></td>
+                            </tr>
+                            <tr>
+                                <th>Quantity:</th>
+                                <td id="productQuantity"></td>
+                            </tr>
+                            <tr>
+                                <th>Subtotal:</th>
+                                <td id="productSubtotal"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <h6>Buyer Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Name:</th>
+                                <td id="buyerName"></td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td id="buyerEmail"></td>
+                            </tr>
+                            <tr>
+                                <th>Phone:</th>
+                                <td id="buyerPhone"></td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Seller Information</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th>Name:</th>
+                                <td id="sellerName"></td>
+                            </tr>
+                            <tr>
+                                <th>Email:</th>
+                                <td id="sellerEmail"></td>
+                            </tr>
+                            <tr>
+                                <th>Phone:</th>
+                                <td id="sellerPhone"></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const searchTerm = document.getElementById('searchInput').value;
+    const status = document.getElementById('statusFilter').value;
+    const date = document.getElementById('dateFilter').value;
+
+    try {
+        const response = await fetch(`/admin/searchOrders?search=${searchTerm}&status=${status}&date=${date}`);
+        if (!response.ok) throw new Error('Search failed');
+        
+        const data = await response.json();
+        // Update the table with search results
+        updateOrdersTable(data.orders);
+    } catch (error) {
+        console.error('Error searching orders:', error);
+        showError('Failed to search orders. Please try again.');
+    }
+});
+
+// View order details functionality
+async function viewOrderDetails(orderId) {
+    try {
+        const response = await fetch(`/admin/getOrder/${orderId}`);
+        if (!response.ok) throw new Error('Failed to fetch order details');
+
+        const order = await response.json();
+        
+        // Update modal with order details
+        document.getElementById('orderId').textContent = order._id;
+        document.getElementById('orderDate').textContent = new Date(order.createdAt).toLocaleString();
+        document.getElementById('orderStatus').innerHTML = `
+            <span class="badge bg-${order.status === 'completed' ? 'success' : 
+                                order.status === 'pending' ? 'warning' : 
+                                order.status === 'processing' ? 'info' :
+                                'danger'}">
+                ${order.status}
+            </span>
+        `;
+        document.getElementById('orderTotal').textContent = `₹${(order.product.price * order.quantity).toFixed(2)}`;
+        
+        // Product information
+        document.getElementById('productImage').src = order.product.image;
+        document.getElementById('productName').textContent = order.product.name;
+        document.getElementById('productCategory').textContent = order.product.category;
+        document.getElementById('productPrice').textContent = `₹${order.product.price.toFixed(2)}`;
+        document.getElementById('productQuantity').textContent = order.quantity;
+        document.getElementById('productSubtotal').textContent = `₹${(order.product.price * order.quantity).toFixed(2)}`;
+        
+        // Buyer information
+        document.getElementById('buyerName').textContent = order.buyer.name;
+        document.getElementById('buyerEmail').textContent = order.buyer.email;
+        document.getElementById('buyerPhone').textContent = order.buyer.phone;
+        
+        // Seller information
+        document.getElementById('sellerName').textContent = order.seller.name;
+        document.getElementById('sellerEmail').textContent = order.seller.email;
+        document.getElementById('sellerPhone').textContent = order.seller.phone;
+
+        new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+    } catch (error) {
+        console.error('Error fetching order details:', error);
+        showError('Failed to fetch order details. Please try again.');
+    }
+}
+
+// Update order status functionality
+async function updateOrderStatus(orderId, status) {
+    if (!confirm(`Are you sure you want to ${status} this order?`)) return;
+
+    try {
+        const response = await fetch('/admin/updateOrderStatus', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ orderId, status })
+        });
+
+        if (!response.ok) throw new Error('Failed to update order status');
+
+        showSuccess('Order status updated successfully');
+        loadContent('orders');
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        showError('Failed to update order status. Please try again.');
+    }
+}
+
+// Helper function to update orders table
+function updateOrdersTable(orders) {
+    const tbody = document.querySelector('table tbody');
+    tbody.innerHTML = orders.map(order => `
+        <tr>
+            <td>${order._id}</td>
+            <td>
+                <div class="d-flex align-items-center">
+                    <img src="<%= order.product && order.product.photo ? `/uploads/${order.product.photo}` : '/img/default-product.png' %>" 
+                         alt="<%= order.product ? order.product.name : 'Product' %>"
+                         class="img-thumbnail me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                    <%= order.product ? order.product.name : 'Unknown Product' %>
+                </div>
+            </td>
+            <td><%= order.buyer ? order.buyer.name : 'Unknown Buyer' %></td>
+            <td><%= order.seller ? order.seller.name : 'Unknown Seller' %></td>
+            <td><%= order.quantity %> kg</td>
+            <td>₹<%= order.product ? (order.product.price * order.quantity).toFixed(2) : '0.00' %></td>
+            <td>
+                <span class="badge bg-<%= order.status === 'completed' ? 'success' : 
+                                    order.status === 'pending' ? 'warning' : 
+                                    order.status === 'processing' ? 'info' :
+                                    'danger' %>">
+                    <%= order.status %>
+                </span>
+            </td>
+            <td><%= new Date(order.createdAt).toLocaleDateString() %></td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="viewOrderDetails('${order._id}')">
+                    <i class="fas fa-eye"></i>
+                </button>
+                ${(order.status === 'pending' || order.status === 'processing') ? `
+                    <button class="btn btn-sm btn-success" onclick="updateOrderStatus('${order._id}', 'completed')">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="updateOrderStatus('${order._id}', 'cancelled')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                ` : ''}
+            </td>
+        </tr>
+    `).join('');
+}
+</script> 

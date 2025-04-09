@@ -1,0 +1,1152 @@
+<!-- Auction Dashboard -->
+<div class="auction-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-left">
+            <h1>Auction Dashboard</h1>
+            <p class="subtitle">Manage your auctions and bids</p>
+        </div>
+        <button class="create-auction-btn" onclick="showCreateAuctionModal()">
+            <i class="fas fa-plus"></i>
+            Create New Auction
+        </button>
+    </div>
+
+    <!-- Auction Stats -->
+    <div class="stats-container">
+        <div class="stat-card active-card">
+            <div class="stat-icon">
+                <i class="fas fa-gavel"></i>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Active Auctions</p>
+                <h3 class="stat-value"><%= auctions.filter(a => a.status === 'active').length %></h3>
+            </div>
+        </div>
+        <div class="stat-card upcoming-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Upcoming</p>
+                <h3 class="stat-value"><%= auctions.filter(a => a.status === 'upcoming').length %></h3>
+            </div>
+        </div>
+        <div class="stat-card bids-card">
+            <div class="stat-icon">
+                <i class="fas fa-hand-paper"></i>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Total Bids</p>
+                <h3 class="stat-value"><%= auctions.reduce((sum, auction) => sum + auction.bids.length, 0) %></h3>
+            </div>
+        </div>
+        <div class="stat-card value-card">
+            <div class="stat-icon">
+                <i class="fas fa-rupee-sign"></i>
+            </div>
+            <div class="stat-info">
+                <p class="stat-label">Total Value</p>
+                <h3 class="stat-value">₹<%= auctions.reduce((sum, auction) => sum + auction.currentPrice, 0).toLocaleString() %></h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auction Management -->
+    <div class="auction-management">
+        <div class="management-header">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchAuctions" placeholder="Search auctions..." onkeyup="filterAuctions()">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" onclick="filterByStatus('all')">All</button>
+                <button class="filter-btn" onclick="filterByStatus('active')">Active</button>
+                <button class="filter-btn" onclick="filterByStatus('upcoming')">Upcoming</button>
+                <button class="filter-btn" onclick="filterByStatus('ended')">Ended</button>
+            </div>
+        </div>
+
+        <!-- Auction Grid -->
+        <div class="auction-grid">
+            <% if (auctions && auctions.length > 0) { %>
+                <% auctions.forEach(auction => { %>
+                    <div class="auction-card" data-status="<%= auction.status %>" data-id="<%= auction._id %>">
+                        <div class="auction-image">
+                            <% if (auction.product.photo) { %>
+                                <img src="<%= auction.product.photo %>" alt="<%= auction.product.name %>">
+                            <% } else { %>
+                                <div class="no-image">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            <% } %>
+                            <div class="auction-status <%= auction.status %>">
+                                <%= auction.status.charAt(0).toUpperCase() + auction.status.slice(1) %>
+                            </div>
+                        </div>
+                        <div class="auction-details">
+                            <h3 class="product-name"><%= auction.product.name %></h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <i class="fas fa-box"></i>
+                                    <span><%= auction.product.quantity %> <%= auction.product.unit %></span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-rupee-sign"></i>
+                                    <span><%= auction.currentPrice.toLocaleString() %></span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="fas fa-users"></i>
+                                    <span><%= auction.bids.length %> bids</span>
+                                </div>
+                            </div>
+                            <div class="auction-time">
+                                <% if (auction.status === 'upcoming') { %>
+                                    <i class="fas fa-hourglass-start"></i>
+                                    <span>Starts in: <span class="countdown" data-time="<%= auction.startTime %>"></span></span>
+                                <% } else if (auction.status === 'active') { %>
+                                    <i class="fas fa-hourglass-half"></i>
+                                    <span>Ends in: <span class="countdown" data-time="<%= auction.endTime %>"></span></span>
+                                <% } else { %>
+                                    <i class="fas fa-hourglass-end"></i>
+                                    <span>Ended: <%= new Date(auction.endTime).toLocaleDateString() %></span>
+                                <% } %>
+                            </div>
+                            <div class="auction-actions">
+                                <a href="/auctions/<%= auction._id %>" class="btn btn-primary">View Details</a>
+                                <% if (auction.status === 'upcoming') { %>
+                                    <button type="button" class="btn btn-danger" onclick="cancelAuction('<%= auction._id %>')">Cancel</button>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="no-auctions">
+                    <i class="fas fa-gavel"></i>
+                    <p>No auctions found</p>
+                    <button class="btn btn-primary" onclick="showCreateAuctionModal()">Create Your First Auction</button>
+                </div>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- Create Auction Modal -->
+<div id="createAuctionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Create New Auction</h2>
+            <button class="close-btn" onclick="hideCreateAuctionModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="auction-form-container">
+            <form id="auctionForm" action="/auctions/create" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="productName">Product Name</label>
+                    <input type="text" id="productName" name="product[name]" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Product Description</label>
+                    <textarea id="description" name="product[description]" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantity (kg)</label>
+                    <input type="number" id="quantity" name="product[quantity]" class="form-control" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="startingPrice">Starting Price (₹)</label>
+                    <input type="number" id="startingPrice" name="startingPrice" class="form-control" min="1" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="minimumIncrement">Minimum Bid Increment (₹)</label>
+                    <input type="number" id="minimumIncrement" name="minimumIncrement" class="form-control" min="1" value="100" required>
+                    <small class="form-text text-muted">Minimum amount by which each new bid must exceed the current bid</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="startTime">Start Time</label>
+                    <input type="datetime-local" id="startTime" name="startTime" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="endTime">End Time</label>
+                    <input type="datetime-local" id="endTime" name="endTime" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="productPhoto">Product Photo</label>
+                    <div class="custom-file-upload">
+                        <input type="file" id="productPhoto" name="productPhoto" accept="image/*" required>
+                        <div class="upload-area" id="uploadArea">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Drag and drop an image or click to select</p>
+                            <small>Supported formats: JPG, PNG (Max size: 5MB)</small>
+                        </div>
+                        <div id="imagePreview" class="image-preview"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Create Auction</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background: #f5f7fb;
+}
+
+.auction-dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px;
+}
+
+/* Header Styles */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.header-left h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.create-auction-btn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+}
+
+.create-auction-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+/* Stats Cards */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+}
+
+.stat-icon i {
+    font-size: 20px;
+    color: white;
+}
+
+.active-card .stat-icon { background: #22c55e; }
+.upcoming-card .stat-icon { background: #3b82f6; }
+.bids-card .stat-icon { background: #f59e0b; }
+.value-card .stat-icon { background: #8b5cf6; }
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    color: #1e293b;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* Auction Management */
+.auction-management {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+/* Search Box */
+.search-box {
+    position: relative;
+    width: 300px;
+}
+
+.search-box i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 16px 12px 44px;
+    border: 1px solid #e5e9f2;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Filter Buttons */
+.filter-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.filter-btn {
+    padding: 8px 16px;
+    border: 1px solid #e5e9f2;
+    border-radius: 8px;
+    background: white;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.filter-btn.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+/* Auction Grid */
+.auction-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.auction-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #e5e9f2;
+    transition: all 0.3s ease;
+}
+
+.auction-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.auction-image {
+    height: 200px;
+    position: relative;
+    background: #f8fafc;
+}
+
+.auction-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.auction-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.auction-status.active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.auction-status.upcoming {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.auction-status.ended {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.auction-details {
+    padding: 20px;
+}
+
+.product-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.info-item i {
+    color: #2563eb;
+}
+
+.auction-time {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.auction-time i {
+    color: #2563eb;
+}
+
+.countdown {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.auction-actions {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow-y: auto;
+}
+
+.modal-content {
+    background: white;
+    max-width: 800px;
+    margin: 32px auto;
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.modal-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    font-size: 20px;
+    padding: 4px;
+    transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+    color: #1e293b;
+}
+
+/* Form Styles */
+.auction-form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.custom-file-upload {
+    border: 2px dashed #ddd;
+    border-radius: 5px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.custom-file-upload:hover {
+    border-color: #28a745;
+    background-color: #f8f9fa;
+}
+
+.upload-area {
+    padding: 20px;
+}
+
+.upload-area i {
+    font-size: 48px;
+    color: #28a745;
+    margin-bottom: 10px;
+}
+
+.image-preview {
+    margin-top: 20px;
+    max-width: 300px;
+    display: none;
+}
+
+.image-preview img {
+    width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.btn-primary {
+    background-color: #28a745;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #218838;
+}
+
+/* Dragover state */
+.custom-file-upload.dragover {
+    border-color: #28a745;
+    background-color: #e8f5e9;
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-secondary {
+    background: white;
+    color: #64748b;
+    border: 1px solid #e5e9f2;
+}
+
+.btn-secondary:hover {
+    border-color: #2563eb;
+    color: #2563eb;
+}
+
+.btn-danger {
+    background: #ef4444;
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+}
+
+/* Empty State */
+.no-auctions {
+    text-align: center;
+    padding: 48px;
+}
+
+.no-auctions i {
+    font-size: 48px;
+    color: #cbd5e1;
+    margin-bottom: 16px;
+}
+
+.no-auctions p {
+    color: #64748b;
+    margin-bottom: 24px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .auction-dashboard {
+        padding: 16px;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .management-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-box {
+        width: 100%;
+    }
+
+    .filter-buttons {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 8px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-content {
+        margin: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+
+    .auction-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function showCreateAuctionModal() {
+    document.getElementById('createAuctionModal').style.display = 'block';
+}
+
+function hideCreateAuctionModal() {
+    document.getElementById('createAuctionModal').style.display = 'none';
+    document.getElementById('auctionForm').reset();
+    document.getElementById('imagePreview').innerHTML = '';
+    document.getElementById('imagePreview').classList.remove('has-image');
+}
+
+function previewImage(event) {
+    const file = event.target.files[0];
+    const imagePreview = document.getElementById('imagePreview');
+    
+    // Validate file type
+    if (!file.type.match('image.*')) {
+        alert('Please select an image file (JPG, PNG, or GIF)');
+        event.target.value = '';
+        return;
+    }
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        event.target.value = '';
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        imagePreview.innerHTML = `
+            <div class="preview-container">
+                <img src="${e.target.result}" alt="Preview">
+                <button type="button" class="remove-image" onclick="removeImage()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        imagePreview.classList.add('has-image');
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeImage() {
+    const fileInput = document.getElementById('productPhoto');
+    const imagePreview = document.getElementById('imagePreview');
+    fileInput.value = '';
+    imagePreview.innerHTML = '';
+    imagePreview.classList.remove('has-image');
+}
+
+function validateAuctionForm() {
+    const form = document.getElementById('auctionForm');
+    const startTime = new Date(form.querySelector('[name="startTime"]').value);
+    const endTime = new Date(form.querySelector('[name="endTime"]').value);
+    const now = new Date();
+
+    if (startTime < now) {
+        alert('Start time must be in the future');
+        return false;
+    }
+
+    if (endTime <= startTime) {
+        alert('End time must be after start time');
+        return false;
+    }
+
+    return true;
+}
+
+// Handle drag and drop
+const fileUploadArea = document.getElementById('fileUploadArea');
+
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    fileUploadArea.addEventListener(eventName, preventDefaults, false);
+});
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+['dragenter', 'dragover'].forEach(eventName => {
+    fileUploadArea.addEventListener(eventName, highlight, false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    fileUploadArea.addEventListener(eventName, unhighlight, false);
+});
+
+function highlight(e) {
+    fileUploadArea.classList.add('dragover');
+}
+
+function unhighlight(e) {
+    fileUploadArea.classList.remove('dragover');
+}
+
+fileUploadArea.addEventListener('drop', handleDrop, false);
+
+function handleDrop(e) {
+    const dt = e.dataTransfer;
+    const file = dt.files[0];
+    const fileInput = document.getElementById('productPhoto');
+    
+    fileInput.files = dt.files;
+    previewImage({ target: fileInput });
+}
+
+// Handle form submission
+document.getElementById('auctionForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    if (!validateAuctionForm()) {
+        return;
+    }
+
+    const formData = new FormData(this);
+    const submitButton = this.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    
+    try {
+        const response = await fetch('/auctions/create', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.redirected) {
+            window.location.href = response.url;
+        } else {
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to create auction');
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert(error.message || 'Failed to create auction');
+    } finally {
+        submitButton.disabled = false;
+        submitButton.innerHTML = 'Create Auction';
+    }
+});
+
+// Function to create auction card
+function createAuctionCard(auction) {
+    const card = document.createElement('div');
+    card.className = 'auction-card';
+    card.dataset.status = auction.status;
+    card.dataset.id = auction._id;
+    
+    card.innerHTML = `
+        <div class="auction-image">
+            ${auction.product.photo 
+                ? `<img src="${auction.product.photo}" alt="${auction.product.name}">`
+                : `<div class="no-image"><i class="fas fa-image"></i></div>`
+            }
+            <div class="auction-status ${auction.status}">
+                ${auction.status.charAt(0).toUpperCase() + auction.status.slice(1)}
+            </div>
+        </div>
+        <div class="auction-details">
+            <h3 class="product-name">${auction.product.name}</h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <i class="fas fa-box"></i>
+                    <span>${auction.product.quantity} ${auction.product.unit}</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-rupee-sign"></i>
+                    <span>${auction.currentPrice.toLocaleString()}</span>
+                </div>
+                <div class="info-item">
+                    <i class="fas fa-users"></i>
+                    <span>0 bids</span>
+                </div>
+            </div>
+            <div class="auction-time">
+                <i class="fas fa-hourglass-start"></i>
+                <span>Starts in: <span class="countdown" data-time="${auction.startTime}"></span></span>
+            </div>
+            <div class="auction-actions">
+                <a href="/auctions/${auction._id}" class="btn btn-primary">View Details</a>
+                <button class="btn btn-danger" onclick="cancelAuction('${auction._id}')">Cancel</button>
+            </div>
+        </div>
+    `;
+    
+    return card;
+}
+
+// Function to update stats
+function updateStats() {
+    const cards = document.querySelectorAll('.auction-card');
+    const stats = {
+        active: 0,
+        upcoming: 0,
+        totalBids: 0,
+        totalValue: 0
+    };
+    
+    cards.forEach(card => {
+        const status = card.dataset.status;
+        if (status === 'active') stats.active++;
+        if (status === 'upcoming') stats.upcoming++;
+        
+        const bids = parseInt(card.querySelector('.info-item:nth-child(3) span').textContent);
+        const value = parseInt(card.querySelector('.info-item:nth-child(2) span').textContent.replace(/[^0-9]/g, ''));
+        
+        stats.totalBids += bids;
+        stats.totalValue += value;
+    });
+    
+    document.querySelector('.active-card .stat-value').textContent = stats.active;
+    document.querySelector('.upcoming-card .stat-value').textContent = stats.upcoming;
+    document.querySelector('.bids-card .stat-value').textContent = stats.totalBids;
+    document.querySelector('.value-card .stat-value').textContent = '₹' + stats.totalValue.toLocaleString();
+}
+
+// Update countdown timer to avoid page reload
+function updateCountdowns() {
+    const countdowns = document.querySelectorAll('.countdown');
+    const now = new Date();
+    
+    countdowns.forEach(countdown => {
+        const targetTime = new Date(countdown.dataset.time);
+        const diff = targetTime - now;
+        
+        if (diff > 0) {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (days > 0) {
+                countdown.textContent = `${days}d ${hours}h`;
+            } else if (hours > 0) {
+                countdown.textContent = `${hours}h ${minutes}m`;
+            } else {
+                countdown.textContent = `${minutes}m`;
+            }
+        } else {
+            countdown.textContent = 'Expired';
+            // Instead of reloading, update the auction status
+            const card = countdown.closest('.auction-card');
+            if (card) {
+                updateAuctionStatus(card);
+            }
+        }
+    });
+}
+
+// Function to update auction status
+async function updateAuctionStatus(card) {
+    const auctionId = card.querySelector('.auction-actions a').href.split('/').pop();
+    try {
+        const response = await fetch(`/auctions/${auctionId}/end`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            card.dataset.status = 'ended';
+            card.querySelector('.auction-status').className = 'auction-status ended';
+            card.querySelector('.auction-status').textContent = 'Ended';
+            card.querySelector('.auction-time').innerHTML = `
+                <i class="fas fa-hourglass-end"></i>
+                <span>Ended: ${new Date().toLocaleDateString()}</span>
+            `;
+            updateStats();
+        }
+    } catch (error) {
+        console.error('Error updating auction status:', error);
+    }
+}
+
+// Filter Functions
+function filterAuctions() {
+    const searchText = document.getElementById('searchAuctions').value.toLowerCase();
+    const cards = document.querySelectorAll('.auction-card');
+    let hasVisibleCards = false;
+
+    cards.forEach(card => {
+        const productName = card.querySelector('.product-name').textContent.toLowerCase();
+        if (productName.includes(searchText)) {
+            card.style.display = 'block';
+            hasVisibleCards = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Show/hide no auctions message
+    const noAuctions = document.querySelector('.no-auctions');
+    if (!hasVisibleCards) {
+        if (!noAuctions) {
+            const auctionGrid = document.querySelector('.auction-grid');
+            auctionGrid.innerHTML += `
+                <div class="no-auctions">
+                    <i class="fas fa-gavel"></i>
+                    <p>No auctions found matching "${searchText}"</p>
+                </div>
+            `;
+        }
+    } else if (noAuctions) {
+        noAuctions.remove();
+    }
+}
+
+function filterByStatus(status) {
+    const cards = document.querySelectorAll('.auction-card');
+    const buttons = document.querySelectorAll('.filter-btn');
+
+    buttons.forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.filter-btn[onclick="filterByStatus('${status}')"]`).classList.add('active');
+
+    cards.forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Show/hide no auctions message
+    const visibleCards = document.querySelectorAll('.auction-card[style="display: block"]');
+    const noAuctions = document.querySelector('.no-auctions');
+    if (visibleCards.length === 0) {
+        if (!noAuctions) {
+            const auctionGrid = document.querySelector('.auction-grid');
+            auctionGrid.innerHTML += `
+                <div class="no-auctions">
+                    <i class="fas fa-gavel"></i>
+                    <p>No ${status === 'all' ? '' : status} auctions found</p>
+                </div>
+            `;
+        }
+    } else if (noAuctions) {
+        noAuctions.remove();
+    }
+}
+
+// Function to cancel auction and remove card
+async function cancelAuction(auctionId) {
+    if (!confirm('Are you sure you want to cancel this auction?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/auctions/${auctionId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Remove the auction card from the dashboard
+            const auctionCard = document.querySelector(`.auction-card[data-id="${auctionId}"]`);
+            if (auctionCard) {
+                auctionCard.remove();
+                
+                // Update stats
+                const upcomingCount = document.querySelector('.upcoming-card .stat-value');
+                if (upcomingCount) {
+                    upcomingCount.textContent = parseInt(upcomingCount.textContent) - 1;
+                }
+
+                // Show "No auctions" message if this was the last auction
+                const auctionGrid = document.querySelector('.auction-grid');
+                if (!auctionGrid.querySelector('.auction-card')) {
+                    auctionGrid.innerHTML = `
+                        <div class="no-auctions">
+                            <i class="fas fa-gavel"></i>
+                            <p>No auctions found</p>
+                            <button class="btn btn-primary" onclick="showCreateAuctionModal()">Create Your First Auction</button>
+                        </div>
+                    `;
+                }
+            }
+        } else {
+            alert(data.message || 'Failed to cancel auction');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to cancel auction');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateCountdowns();
+    setInterval(updateCountdowns, 60000);
+});
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('createAuctionModal');
+    if (event.target === modal) {
+        hideCreateAuctionModal();
+    }
+}
+</script> 

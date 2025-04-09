@@ -1,0 +1,510 @@
+<!-- Auction Details Page -->
+<div class="auction-details-page">
+    <div class="details-header">
+        <div class="header-left">
+            <a href="/auctions/dashboard" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+            <h1><%= auction.product.name %></h1>
+            <div class="auction-status <%= auction.status %>">
+                <%= auction.status.charAt(0).toUpperCase() + auction.status.slice(1) %>
+            </div>
+        </div>
+        <% if (auction.status === 'upcoming' && isOwner) { %>
+            <button class="btn btn-danger" onclick="cancelAuction('<%= auction._id %>')">
+                <i class="fas fa-times"></i>
+                Cancel Auction
+            </button>
+        <% } %>
+    </div>
+
+    <div class="details-content">
+        <div class="details-main">
+            <div class="product-images">
+                <% if (auction.product.photo) { %>
+                    <img src="<%= auction.product.photo %>" alt="<%= auction.product.name %>" class="main-image">
+                <% } else { %>
+                    <div class="no-image">
+                        <i class="fas fa-image"></i>
+                        <p>No image available</p>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="product-info">
+                <div class="info-section">
+                    <h2>Product Details</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">Quantity</span>
+                            <span class="value"><%= auction.product.quantity %> <%= auction.product.unit %></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Current Price</span>
+                            <span class="value price">₹<%= auction.currentPrice.toLocaleString() %></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Starting Price</span>
+                            <span class="value">₹<%= auction.startingPrice.toLocaleString() %></span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Minimum Increment</span>
+                            <span class="value">₹<%= auction.minIncrement.toLocaleString() %></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h2>Auction Timeline</h2>
+                    <div class="timeline-info">
+                        <div class="time-item">
+                            <i class="fas fa-clock"></i>
+                            <% if (auction.status === 'upcoming') { %>
+                                <span>Starts in: <span class="countdown" data-time="<%= auction.startTime %>"></span></span>
+                            <% } else if (auction.status === 'active') { %>
+                                <span>Ends in: <span class="countdown" data-time="<%= auction.endTime %>"></span></span>
+                            <% } else { %>
+                                <span>Ended on: <%= new Date(auction.endTime).toLocaleDateString() %></span>
+                            <% } %>
+                        </div>
+                        <div class="time-details">
+                            <div>
+                                <span class="label">Start Time:</span>
+                                <span class="value"><%= new Date(auction.startTime).toLocaleString() %></span>
+                            </div>
+                            <div>
+                                <span class="label">End Time:</span>
+                                <span class="value"><%= new Date(auction.endTime).toLocaleString() %></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-section">
+                    <h2>Product Description</h2>
+                    <p class="description"><%= auction.product.description %></p>
+                </div>
+
+                <% if (auction.status === 'active' && !isOwner) { %>
+                    <div class="bidding-section">
+                        <h2>Place Your Bid</h2>
+                        <form id="bidForm" onsubmit="placeBid(event)">
+                            <div class="bid-input">
+                                <span class="currency">₹</span>
+                                <input type="number" id="bidAmount" name="amount" 
+                                    min="<%= auction.currentPrice + auction.minIncrement %>" 
+                                    step="1"
+                                    required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Place Bid</button>
+                        </form>
+                        <p class="bid-hint">
+                            Minimum bid: ₹<%= (auction.currentPrice + auction.minIncrement).toLocaleString() %>
+                        </p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+
+        <div class="details-sidebar">
+            <div class="bid-history">
+                <h2>Bid History</h2>
+                <% if (auction.bids && auction.bids.length > 0) { %>
+                    <div class="bids-list">
+                        <% auction.bids.sort((a, b) => b.amount - a.amount).forEach(bid => { %>
+                            <div class="bid-item">
+                                <div class="bid-info">
+                                    <span class="bidder"><%= bid.bidder.name %></span>
+                                    <span class="amount">₹<%= bid.amount.toLocaleString() %></span>
+                                </div>
+                                <span class="time"><%= new Date(bid.time).toLocaleString() %></span>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <div class="no-bids">
+                        <i class="fas fa-gavel"></i>
+                        <p>No bids yet</p>
+                    </div>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Auction Details Styles */
+.auction-details-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px;
+}
+
+.details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.back-btn:hover {
+    color: #2563eb;
+}
+
+.details-header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+.details-content {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 32px;
+}
+
+.details-main {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.product-images {
+    width: 100%;
+    height: 400px;
+    background: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.no-image {
+    text-align: center;
+    color: #cbd5e1;
+}
+
+.no-image i {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.product-info {
+    padding: 32px;
+}
+
+.info-section {
+    margin-bottom: 32px;
+}
+
+.info-section h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.info-item .label {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.info-item .value {
+    color: #1e293b;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.info-item .value.price {
+    color: #2563eb;
+    font-size: 24px;
+}
+
+.timeline-info {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.time-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #1e293b;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+.time-item i {
+    color: #2563eb;
+}
+
+.time-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.description {
+    color: #475569;
+    line-height: 1.6;
+}
+
+.bidding-section {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 24px;
+    margin-top: 32px;
+}
+
+.bid-input {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.currency {
+    background: #e2e8f0;
+    padding: 10px 16px;
+    border-radius: 8px 0 0 8px;
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.bid-input input {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+    border-left: none;
+    border-radius: 0 8px 8px 0;
+    font-size: 16px;
+}
+
+.bid-hint {
+    margin-top: 8px;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.details-sidebar {
+    position: sticky;
+    top: 32px;
+    align-self: start;
+}
+
+.bid-history {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bid-history h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
+}
+
+.bids-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.bid-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.bid-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.bidder {
+    color: #1e293b;
+    font-weight: 500;
+}
+
+.amount {
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.time {
+    color: #64748b;
+    font-size: 14px;
+}
+
+.no-bids {
+    text-align: center;
+    padding: 32px 0;
+    color: #cbd5e1;
+}
+
+.no-bids i {
+    font-size: 48px;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 1024px) {
+    .details-content {
+        grid-template-columns: 1fr;
+    }
+
+    .details-sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .auction-details-page {
+        padding: 16px;
+    }
+
+    .details-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .product-images {
+        height: 300px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Countdown Timer
+function updateCountdowns() {
+    const countdowns = document.querySelectorAll('.countdown');
+    const now = new Date();
+    
+    countdowns.forEach(countdown => {
+        const targetTime = new Date(countdown.dataset.time);
+        const diff = targetTime - now;
+        
+        if (diff > 0) {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (days > 0) {
+                countdown.textContent = `${days}d ${hours}h`;
+            } else if (hours > 0) {
+                countdown.textContent = `${hours}h ${minutes}m`;
+            } else {
+                countdown.textContent = `${minutes}m`;
+            }
+        } else {
+            countdown.textContent = 'Expired';
+            location.reload();
+        }
+    });
+}
+
+// Place Bid
+function placeBid(event) {
+    event.preventDefault();
+    
+    const amount = document.getElementById('bidAmount').value;
+    
+    fetch(`/auctions/<%= auction._id %>/bid`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ amount })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message || 'Failed to place bid');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while placing the bid');
+    });
+}
+
+// Cancel Auction
+function cancelAuction(auctionId) {
+    if (confirm('Are you sure you want to cancel this auction?')) {
+        fetch(`/auctions/${auctionId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/auctions/dashboard';
+            } else {
+                alert(data.message || 'Failed to cancel auction');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while cancelling the auction');
+        });
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateCountdowns();
+    setInterval(updateCountdowns, 60000);
+});
+</script> 

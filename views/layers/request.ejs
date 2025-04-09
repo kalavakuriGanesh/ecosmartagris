@@ -1,0 +1,168 @@
+<main class="main-content">
+    <header class="header">
+        <h1>Requests box</h1>
+    </header>
+    <!-- <div class="search-bar-container">
+        <input type="text" id="filterProduct" placeholder="Search by Name">
+        <input type="text" id="filterName" placeholder="Search by Seller">
+        <input type="text" id="filterPlace" placeholder="Search by Place">
+    </div> -->
+    <!-- Product Grid -->
+    <section class="product-grid">
+        
+        <% requests.forEach( (request, key) => { 
+          if(!request.buyerDetail.photo){
+              photo = "/img/default-customer.png";
+          } else { photo = "/uploads/"+request.buyerDetail.photo; } %>
+            <div class="product-card" data-id="<%- request._id %>" data-key="<%= key %>">
+                <div class="product-photo">
+                    <img id="product-image" src="/uploads/<%- request.productDetail.photo %>" alt="<%- request.productDetail.name%>" >
+                    <h1>&nbsp;~&nbsp;</h1>
+                    <img id="buyer-photo" src="<%= photo %>" alt="<%- request.buyerDetail.name%>" >
+                </div>
+                <div class="product-details">
+                    <h3 id="product-name"><%- request.productDetail.name %></h3>
+                    <div class="status">
+                      <p id="product-status" class="<%- request.status %>"><%- request.status %></p>
+                    </div>
+                    <input type="hidden" value="<%- request.productDetail.location %>" id="product-location">
+                    <input type="hidden" value="<%- request.buyerDetail.name %>" id="buyer-name">
+                </div>
+            </div>
+        <% }) %>
+    </section>
+    <!-- Product Detail Popup -->
+  <div class="product-popup-container" id="productPopup">
+    <div class="product-popup">
+        <!-- Action Buttons -->
+        <div class="popup-actions">
+            <button id="closePopup">Back</button>
+            <button id="del-btn" form="result" value="rejected" name="btn" style="display: none;">reject</button>
+            <button class="buy-btn" id="seenbtn" style="display: none;">Seen</button>
+        </div>
+
+        <!-- Product Image -->
+        <div class="product-img">
+            <div class="product-img-container">
+                <img id="popupProductPhoto" alt="Product">
+                <p class="product-name" id="popup-product-name">--</p>
+            </div>
+            <div class="product-img-container">
+                <img id="popupBuyerPhoto" alt="Buyer">
+                <p class="buyer-name" id="popup-buyer-name">--</p>
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="pop-product-details">
+            <p class="price" id="popupRequestedQuantity"></p>
+            <p class="price" id="popupProductPrice"></p>
+            <div class="seller-info">
+                <h3>Buyer Information</h3>
+                <p id="popupSellerName"></p>
+                <p id="type"></p>
+                <p id="popupSellerContact"></p>
+                <p id="popupSellerAddress"></p>
+            </div>
+        </div>
+
+        <form method="post" action="/product/result" id="result">
+            <div class="buy-input-container" id="stage1">
+                <center><button value="accepted" name="btn">Accept</button></center>
+            </div>
+            <input type="hidden" id="orderId" name="orderId" >
+        </form>
+        <form method="post" action="/order/verify" id="verify" autocomplete="off" id="code">
+            <div class="buy-input-container" id="stage2">
+                <input type="text" placeholder="Enter Code" name="code" required>
+                <button>Verify</button> 
+                <input type="hidden" id="orderID" name="orderID">
+            </div>
+        </form>
+    </div>
+  </div>
+</main>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        const productPopup = document.getElementById('productPopup');
+        const closePopup = document.getElementById('closePopup');
+        const stage1 = document.getElementById('stage1');
+        const stage2 = document.getElementById('stage2');
+        const rejectbtn = document.getElementById('del-btn');
+        const seenbtn = document.getElementById('seenbtn');
+
+        // Popup Fields
+        const popupProductPhoto = document.getElementById('popupProductPhoto');
+        const popupBuyerPhoto = document.getElementById('popupBuyerPhoto');
+        const popupBuyerName = document.getElementById('popupSellerName');
+        const popupBuyerContact = document.getElementById('popupSellerContact');
+        const popupBuyerAddress = document.getElementById('popupSellerAddress');
+        const type = document.getElementById('type');
+        const product_name = document.getElementById('popup-product-name');
+        const buyer_name = document.getElementById('popup-buyer-name');
+        const requestQuantity = document.getElementById('popupRequestedQuantity');
+        const productPrice = document.getElementById('popupProductPrice');
+        const productList = document.querySelector('.product-grid');
+        const orderId = document.getElementById('orderId');
+        const orderID = document.getElementById('orderID');
+
+        productList.addEventListener('click', (event) => {
+            const card = event.target.closest('.product-card');
+            if (!card) return;
+
+            const product = <%- JSON.stringify(requests) %>[card.dataset.key];
+            
+            if(product.buyerDetail.photo) {
+                popupBuyerPhoto.src = '/uploads/'+product.buyerDetail.photo;
+            } else {
+                popupBuyerPhoto.src = '/img/default-customer.png';
+            }
+            popupProductPhoto.src = '/uploads/'+product.productDetail.photo;
+            product_name.textContent = product.productDetail.name;
+            buyer_name.textContent = product.buyerDetail.name;
+            requestQuantity.textContent = `Requested Quantity (kg): ${product.quantity}`;
+            productPrice.textContent = `Product Price (Rs): ${product.productDetail.price}`;
+            popupBuyerName.textContent = "Name: "+product.buyerDetail.name;
+            popupBuyerContact.textContent = "Contact: "+product.buyerDetail.phone;
+            popupBuyerAddress.textContent = "Address: "+product.buyerDetail.address;
+            const role = product.buyerDetail.role;
+            type.textContent = "Account Type: "+role.charAt(0).toUpperCase()+role.slice(1);
+            orderId.value = product._id;
+            orderID.value = product._id;
+            productPopup.classList.add('show');
+            document.body.style.overflow = 'hidden';
+
+            const status = product.status;
+            if(status === 'pending') {
+                // rejectbtn.style.display = 'block';
+                stage1.classList.add("show");
+            } else if(status === 'accepted') {
+                seenbtn.style.display = 'block';
+            } else if(status === 'completed' || status === 'rejected') {
+                rejectbtn.style.display = 'none';
+                stage1.classList.remove("show");
+                seenbtn.style.display = 'none';
+                stage2.classList.remove("show");
+            }
+        });
+
+        seenbtn.addEventListener('click', () => {
+            stage2.classList.add("show");
+            stage2.scrollIntoView();
+        });
+
+        closePopup.addEventListener('click', () => {
+            productPopup.classList.remove('show');
+            document.body.style.overflow = 'auto';
+        });        
+
+        window.addEventListener('pageshow', (event) => {
+            if(event.persisted) {
+                document.getElementById('code').reset();
+            }
+        });
+    });
+</script>

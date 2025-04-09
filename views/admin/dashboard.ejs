@@ -1,0 +1,279 @@
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard Overview</h1>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Total Users</h6>
+                        <h2 class="mt-2 mb-0"><%= stats.totalUsers || 0 %></h2>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Total Farmers</h6>
+                        <h2 class="mt-2 mb-0"><%= stats.totalFarmers || 0 %></h2>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Total Products</h6>
+                        <h2 class="mt-2 mb-0"><%= stats.totalProducts || 0 %></h2>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-box"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-0">Total Orders</h6>
+                        <h2 class="mt-2 mb-0"><%= stats.totalOrders || 0 %></h2>
+                    </div>
+                    <div class="fs-1">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recent Orders</h5>
+        <a href="#" data-feature="orders" class="btn btn-sm btn-primary">View All</a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Product</th>
+                        <th>Buyer</th>
+                        <th>Seller</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (recentOrders && recentOrders.length > 0) { %>
+                        <% recentOrders.forEach(order => { %>
+                            <tr>
+                                <td><%= order._id %></td>
+                                <td><%= order.product ? order.product.name : 'N/A' %></td>
+                                <td><%= order.buyer ? order.buyer.name : 'N/A' %></td>
+                                <td><%= order.seller ? order.seller.name : 'N/A' %></td>
+                                <td>
+                                    <span class="badge bg-<%= order.status === 'completed' ? 'success' : 
+                                                        order.status === 'pending' ? 'warning' : 
+                                                        'danger' %>">
+                                        <%= order.status || 'pending' %>
+                                    </span>
+                                </td>
+                                <td><%= order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A' %></td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" 
+                                            onclick="updateOrderStatus('<%= order._id %>', 'completed')">
+                                        Complete
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" 
+                                            onclick="updateOrderStatus('<%= order._id %>', 'cancelled')">
+                                        Cancel
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="7" class="text-center">No recent orders found</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Customers Section -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recent Customers</h5>
+        <a href="#" data-feature="users" class="btn btn-sm btn-primary">View All</a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Joined Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (customers && customers.length > 0) { %>
+                        <% customers.slice(0, 5).forEach(customer => { %>
+                            <tr>
+                                <td><%= customer.name %></td>
+                                <td><%= customer.email %></td>
+                                <td><%= customer.phone %></td>
+                                <td><%= customer.address %></td>
+                                <td><%= new Date(customer.createdAt).toLocaleDateString() %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center">No customers found</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Farmers Section -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Recent Farmers</h5>
+        <a href="#" data-feature="farmers" class="btn btn-sm btn-primary">View All</a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Joined Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (farmers && farmers.length > 0) { %>
+                        <% farmers.slice(0, 5).forEach(farmer => { %>
+                            <tr>
+                                <td><%= farmer.name %></td>
+                                <td><%= farmer.email %></td>
+                                <td><%= farmer.phone %></td>
+                                <td><%= farmer.address %></td>
+                                <td><%= new Date(farmer.createdAt).toLocaleDateString() %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center">No farmers found</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="#" data-feature="users" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus"></i> Add New User
+                    </a>
+                    <a href="#" data-feature="products" class="btn btn-outline-success">
+                        <i class="fas fa-box-open"></i> Manage Products
+                    </a>
+                    <a href="#" data-feature="orders" class="btn btn-outline-info">
+                        <i class="fas fa-tasks"></i> Process Orders
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">System Status</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Server Status
+                        <span class="badge bg-success">Online</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Database Status
+                        <span class="badge bg-success">Connected</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Last Backup
+                        <span class="text-muted">2 hours ago</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        System Version
+                        <span class="text-muted">v1.0.0</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function updateOrderStatus(orderId, status) {
+    try {
+        const response = await fetch('/admin/updateOrderStatus', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ orderId, status })
+        });
+
+        if (!response.ok) throw new Error('Failed to update order status');
+
+        showSuccess('Order status updated successfully');
+        loadContent('dashboard');
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        showError('Failed to update order status. Please try again.');
+    }
+}
+</script> 

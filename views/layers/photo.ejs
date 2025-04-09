@@ -1,0 +1,51 @@
+<main class="main-content">
+    <header class="header">
+        <h1>Update Profile Photo</h1>
+    </header>
+
+    <section class="profile-photo-update">
+        <!-- Profile Photo Preview -->
+        <% if(!user.photo){
+            if(user.role === 'farmer'){
+                photo = "/img/default-farmer.png";
+            } else {
+                photo = "/img/default-customer.png";
+            }
+        } else {
+            photo = "/uploads/"+user.photo;
+        } %>
+        <div class="photo-preview">
+            <img id="previewImage" src="<%= photo %>" alt="Profile Photo" />
+        </div>
+
+        <!-- Form to Choose and Upload Photo -->
+        <form id="photoForm" enctype="multipart/form-data" action="/upload_photo" method="POST" onsubmit="return check(event);">
+            <label for="photoInput" class="choose-photo-btn">Choose Photo</label>
+            <input type="file" id="photoInput" name="image" accept="image/*" hidden/>
+            <input type="hidden" name="old_image" value="<%= photo %>"/>
+            <button type="submit" class="upload-photo-btn" style="display: none;" id="btn">Upload Photo</button>
+        </form>
+    </section>
+</main>
+<script>
+    document.getElementById("photoInput").addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById("previewImage").src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+            document.getElementById("btn").style.display = "block"
+        }
+    });
+    function check(event){
+        const input = document.getElementById("photoInput").value;
+        if(!input){
+            event.preventDefault();
+            return false;
+        }
+        return true;
+    }
+</script>

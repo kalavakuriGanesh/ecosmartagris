@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        .auction-image {
+            max-height: 400px;
+            object-fit: contain;
+            width: 100%;
+            background: #f8f9fa;
+        }
+        .bid-item {
+            border-bottom: 1px solid #dee2e6;
+            padding: 10px 0;
+        }
+        .bid-item:last-child {
+            border-bottom: none;
+        }
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .status-upcoming { background: #fef3c7; color: #92400e; }
+        .status-active { background: #dcfce7; color: #166534; }
+        .status-ended { background: #f3f4f6; color: #1f2937; }
+        .status-cancelled { background: #fee2e2; color: #991b1b; }
+        .countdown { font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/auctions">Auctions</a></li>
+                <li class="breadcrumb-item active" aria-current="page"><%= auction.product.name %></li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card position-relative">
+                    <% if (auction.product.photo) { %>
+                        <img src="<%= auction.product.photo %>" class="auction-image card-img-top" alt="<%= auction.product.name %>">
+                    <% } else { %>
+                        <div class="auction-image d-flex align-items-center justify-content-center">
+                            <i class="fas fa-image fa-3x text-muted"></i>
+                        </div>
+                    <% } %>
+                    <div class="status-badge status-<%= auction.status %>">
+                        <%= auction.status.charAt(0).toUpperCase() + auction.status.slice(1) %>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title mb-4"><%= auction.product.name %></h3>
+                        <p class="card-text"><%= auction.product.description %></p>
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Details</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Quantity
+                                        <span><%= auction.product.quantity %> <%= auction.product.unit %></span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Starting Price
+                                        <span>₹<%= auction.startingPrice.toLocaleString() %></span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Current Price
+                                        <span>₹<%= auction.currentPrice.toLocaleString() %></span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Minimum Increment
+                                        <span>₹<%= auction.minimumIncrement.toLocaleString() %></span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5 class="mb-3">Auction Timeline</h5>
+                                <ul class="list-group list-group-flush">
+                                    <li class="list-group-item">
+                                        <small class="text-muted">Start Time</small><br>
+                                        <%= new Date(auction.startTime).toLocaleString() %>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <small class="text-muted">End Time</small><br>
+                                        <%= new Date(auction.endTime).toLocaleString() %>
+                                    </li>
+                                    <li class="list-group-item">
+                                        <small class="text-muted">Time Remaining</small><br>
+                                        <span id="countdown" class="countdown"></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <% if (user.role === 'retailer' && auction.status === 'active') { %>
+                        <div class="mt-4">
+                            <h5 class="mb-3">Place Your Bid</h5>
+                            <form id="bidForm" class="row g-3 align-items-end">
+                                <div class="col-sm-8 col-md-6">
+                                    <label for="bidAmount" class="form-label">Your Bid Amount (₹)</label>
+                                    <input type="number" class="form-control" id="bidAmount" name="amount"
+                                           min="<%= auction.currentPrice + auction.minimumIncrement %>" 
+                                           step="1" required>
+                                    <div class="form-text">
+                                        Minimum bid: ₹<%= (auction.currentPrice + auction.minimumIncrement).toLocaleString() %>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4 col-md-3">
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-gavel me-2"></i>Place Bid
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Bid History</h5>
+                        <span class="badge bg-primary"><%= auction.bids.length %> bids</span>
+                    </div>
+                    <div class="card-body" id="bidHistory">
+                        <% if (auction.bids && auction.bids.length > 0) { %>
+                            <% auction.bids.sort((a, b) => b.time - a.time).forEach(bid => { %>
+                            <div class="bid-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="fw-500"><%= bid.bidder.businessName %></span>
+                                    <span class="text-primary">₹<%= bid.amount.toLocaleString() %></span>
+                                </div>
+                                <small class="text-muted"><%= new Date(bid.time).toLocaleString() %></small>
+                            </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-center text-muted py-4">
+                                <i class="fas fa-hand-paper fa-2x mb-2"></i>
+                                <p class="mb-0">No bids yet</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Seller Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Farmer:</strong> <%= auction.farmer.name %></p>
+                        <p class="mb-1"><strong>Location:</strong> <%= auction.farmer.location || 'Not specified' %></p>
+                        <p class="mb-0"><strong>Contact:</strong> <%= auction.farmer.phone || 'Not available' %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Countdown Timer
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const startTime = new Date('<%= auction.startTime %>').getTime();
+            const endTime = new Date('<%= auction.endTime %>').getTime();
+            
+            let timeLeft;
+            let message;
+            
+            if (now < startTime) {
+                timeLeft = startTime - now;
+                message = 'Starts in: ';
+            } else if (now < endTime) {
+                timeLeft = endTime - now;
+                message = 'Ends in: ';
+            } else {
+                document.getElementById('countdown').innerHTML = 'Auction ended';
+                return;
+            }
+            
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            
+            document.getElementById('countdown').innerHTML = message +
+                (days > 0 ? days + 'd ' : '') +
+                hours.toString().padStart(2, '0') + ':' +
+                minutes.toString().padStart(2, '0') + ':' +
+                seconds.toString().padStart(2, '0');
+        }
+
+        // Update countdown every second
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // Bid Form Handler
+        const bidForm = document.getElementById('bidForm');
+        if (bidForm) {
+            bidForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const amount = document.getElementById('bidAmount').value;
+                
+                try {
+                    const response = await fetch('/auctions/<%= auction._id %>/bid', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ amount: parseFloat(amount) })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Failed to place bid');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to place bid');
+                }
+            });
+        }
+    </script>
+</body>
+</html> 

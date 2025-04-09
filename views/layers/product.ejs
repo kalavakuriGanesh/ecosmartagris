@@ -1,0 +1,185 @@
+<main class="main-content">
+    <header class="header">
+        <h1>Product Tab</h1>
+    </header>
+    <div class="search-bar-container">
+        <input type="text" id="filterName" placeholder="Search by Name">
+        <input type="number" id="minPrice" placeholder="Min Price" min="0">
+        <input type="number" id="maxPrice" placeholder="Max Price" min="0">
+        <input type="text" id="filterPlace" placeholder="Search by Place">
+    </div>
+    <!-- Product Grid -->
+    <section class="product-grid">
+        
+        <% products.forEach( (product, key) => { 
+            if(!(product.seller == user._id) && !(product.quantity == product.ordered)) { %>
+            <div class="product-card" data-id="<%- product._id %>" data-key="<%= key %>" data-sel="<%- product.seller %>">
+                <div class="product-photo">
+                    <img src="/img/<%- product.photo %>" alt="<%- product.name%>" >
+                </div>
+                <div class="product-details">
+                    <h3 id="product-name"><%- product.name %></h3>
+                    <p id="product-price">Price: <%- product.price %> /kg</p>
+                    <input type="hidden" value="<%- product.location %>" id="product-location">
+                </div>
+            </div>
+        <% }}) %>
+        
+    </section>
+    <!-- Product Detail Popup -->
+    <div class="product-popup-container" id="productPopup">
+        <div class="product-popup">
+            <!-- Action Buttons -->
+            <div class="popup-actions">
+                <button id="closePopup">Back</button>
+                <button class="buy-btn">order</button>
+            </div>
+
+            <!-- Product Image -->
+            <div class="product-image">
+                <img id="popupProductPhoto" src="" alt="Product">
+            </div>
+
+            <!-- Product Details -->
+            <div class="pop-product-details">
+                <h2 id="popupProductName"></h2>
+                <p class="price" id="popupProductPrice"></p>
+                <p class="price" id="popupProductLocation"></p>
+                <div class="description">
+                    <h3>Description :</h3>
+                    <p id="popupProductDescription"></p>
+                    <h3>Posted On</h3>
+                    <p id="popupPosted"></p>
+                </div>
+
+                <div class="seller-info">
+                    <h3>Seller Information:</h3>
+                    <p id="popupSellerName"></p>
+                    <p id="popupSellerContact"></p>
+                    <p id="popupSellerAddress"></p>
+                </div>
+            </div>
+
+            <!-- Input for Buying -->
+            <form method="post" action="/product/order" autocomplete="off" id="buy">
+                <div class="buy-input-container" id="buyInputContainer">
+                    <label for="buyerInput">Enter quantity:</label>
+                    <input type="number" id="buyerInput" name="quantity" min="0.5" step="any" required>
+                    <input type="hidden" id="productId" name="productId">
+                    <button type="submit" id="submitBuy">Submit</button>                 
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const productPopup = document.getElementById('productPopup');
+        const closePopup = document.getElementById('closePopup');
+        const productCards = document.querySelectorAll('.product-card');
+        const buyButton = document.querySelector(".buy-btn");
+        const buyInputContainer = document.getElementById('buyInputContainer');
+        const submitBuyButton = document.getElementById("submitBuy");
+
+        // Filter Elements
+        const nameInput = document.getElementById('filterName');
+        const minPriceInput = document.getElementById('minPrice');
+        const maxPriceInput = document.getElementById('maxPrice');
+        const placeInput = document.getElementById('filterPlace');
+
+        // Popup Fields
+        const popupProductPosted = document.getElementById('popupPosted');
+        const popupProductPhoto = document.getElementById('popupProductPhoto');
+        const popupProductName = document.getElementById('popupProductName');
+        const popupProductPrice = document.getElementById('popupProductPrice');
+        const popupProductLocation = document.getElementById('popupProductLocation');
+        const popupProductDescription = document.getElementById('popupProductDescription');
+        const popupSellerName = document.getElementById('popupSellerName');
+        const popupSellerContact = document.getElementById('popupSellerContact');
+        const popupSellerAddress = document.getElementById('popupSellerAddress');
+        const popupQuantityNeed = document.getElementById('buyerInput');
+        const popupProductId = document.getElementById('productId');
+        const productList = document.querySelector('.product-grid');
+
+        // Filter Function
+        function filterProducts() {
+            const nameInput = document.getElementById('filterName');
+            const minPriceInput = document.getElementById('minPrice');
+            const maxPriceInput = document.getElementById('maxPrice');
+            const placeInput = document.getElementById('filterPlace');
+            
+            const cards = document.querySelectorAll('.product-card');
+            cards.forEach(card => {
+                const productName = card.querySelector('#product-name').textContent.toLowerCase();
+                const productPrice = parseFloat(card.querySelector('#product-price').textContent);
+                const productPlace = card.querySelector('#product-location').value.toLowerCase();
+                
+                const matchesName = !nameInput.value || productName.includes(nameInput.value.trim().toLowerCase());
+                const matchesPriceMin = !minPriceInput.value || parseFloat(minPriceInput.value.trim()) <= productPrice;
+                const matchesPriceMax = !maxPriceInput.value || parseFloat(maxPriceInput.value.trim()) >= productPrice;
+                const matchesPlace = !placeInput.value || productPlace.includes(placeInput.value.trim().toLowerCase());
+                
+                card.style.display = matchesName && matchesPriceMin && matchesPriceMax && matchesPlace ? 'block' : 'none';
+            });
+        }
+
+        function execute(event){
+            if(event.code == "Enter") {
+                filterProducts();
+            }
+        }
+
+        // Add event listeners for filter inputs
+        document.getElementById('filterName').addEventListener('keydown', execute);
+        document.getElementById('minPrice').addEventListener('keydown', execute);
+        document.getElementById('maxPrice').addEventListener('keydown', execute);
+        document.getElementById('filterPlace').addEventListener('keydown', execute);
+
+        // Show popup and populate with product data
+        productList.addEventListener('click', (event) => {
+            const card = event.target.closest('.product-card');
+            if (!card) return;
+
+            const product = <%- JSON.stringify(products) %>[card.dataset.key];
+            const farmer = <%- JSON.stringify(farmers) %>[product.seller];
+            const available = String(parseFloat(product.quantity) - (parseFloat(product.ordered)));
+
+            popupProductPosted.textContent = product.created;
+            popupProductPhoto.src = card.querySelector('img').src;
+            popupProductName.textContent = product.name;
+            popupProductPrice.textContent = `Price: ${product.price}`;
+            popupProductLocation.textContent = `Location: ${product.location}`;
+            popupProductDescription.textContent = product.description;
+            popupSellerName.textContent = `Name: ${farmer.name}`;
+            popupSellerContact.textContent = `Contact: ${farmer.phone}`;
+            popupSellerAddress.textContent = `Address: ${farmer.address}`;
+            popupQuantityNeed.placeholder = `lesst than ${available}`;
+            popupQuantityNeed.max = product.quantity;
+            popupProductId.value = product._id;
+
+            productPopup.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        });
+
+        // Input in Popup
+        buyButton.addEventListener("click", () => {
+            buyInputContainer.classList.add("show");
+            buyInputContainer.scrollIntoView();
+            popupQuantityNeed.focus();
+        });
+
+        // Close popup
+        closePopup.addEventListener('click', () => {
+            productPopup.classList.remove('show');
+            document.body.style.overflow = 'auto';
+            buyInputContainer.classList.remove('show');
+        });
+
+        window.addEventListener('pageshow', (event) => {
+            if(event.persisted) {
+                document.getElementById('buy').reset();
+            }
+        });
+    });
+</script>

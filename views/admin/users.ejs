@@ -1,0 +1,321 @@
+<!-- Users Management Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4>Users Management</h4>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+        <i class="fas fa-user-plus"></i> Add New User
+    </button>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="searchForm" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search users...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="roleFilter">
+                    <option value="">All Roles</option>
+                    <option value="user">User</option>
+                    <option value="farmer">Farmer</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% users.forEach(user => { %>
+                        <tr>
+                            <td><%= user.name %></td>
+                            <td><%= user.email %></td>
+                            <td>
+                                <span class="badge bg-<%= user.role === 'admin' ? 'danger' : 
+                                                    user.role === 'farmer' ? 'success' : 
+                                                    'primary' %>">
+                                    <%= user.role %>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-<%= user.status === 'active' ? 'success' : 
+                                                    user.status === 'inactive' ? 'warning' : 
+                                                    'danger' %>">
+                                    <%= user.status %>
+                                </span>
+                            </td>
+                            <td><%= new Date(user.createdAt).toLocaleDateString() %></td>
+                            <td>
+                                <button class="btn btn-sm btn-info" onclick="editUser('<%= user._id %>')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteUser('<%= user._id %>')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addUserForm">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" name="role" required>
+                            <option value="user">User</option>
+                            <option value="farmer">Farmer</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitAddUser()">Add User</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <input type="hidden" name="userId">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Role</label>
+                        <select class="form-select" name="role" required>
+                            <option value="user">User</option>
+                            <option value="farmer">Farmer</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" name="status" required>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitEditUser()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const searchTerm = document.getElementById('searchInput').value;
+    const role = document.getElementById('roleFilter').value;
+    const status = document.getElementById('statusFilter').value;
+
+    try {
+        const response = await fetch(`/admin/searchUsers?search=${searchTerm}&role=${role}&status=${status}`);
+        if (!response.ok) throw new Error('Search failed');
+        
+        const data = await response.json();
+        // Update the table with search results
+        updateUsersTable(data.users);
+    } catch (error) {
+        console.error('Error searching users:', error);
+        showError('Failed to search users. Please try again.');
+    }
+});
+
+// Add user functionality
+async function submitAddUser() {
+    const form = document.getElementById('addUserForm');
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch('/admin/addUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        if (!response.ok) throw new Error('Failed to add user');
+
+        showSuccess('User added successfully');
+        bootstrap.Modal.getInstance(document.getElementById('addUserModal')).hide();
+        loadContent('users');
+    } catch (error) {
+        console.error('Error adding user:', error);
+        showError('Failed to add user. Please try again.');
+    }
+}
+
+// Edit user functionality
+async function editUser(userId) {
+    try {
+        const response = await fetch(`/admin/getUser/${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch user data');
+
+        const user = await response.json();
+        const form = document.getElementById('editUserForm');
+        
+        form.querySelector('[name="userId"]').value = user._id;
+        form.querySelector('[name="name"]').value = user.name;
+        form.querySelector('[name="email"]').value = user.email;
+        form.querySelector('[name="role"]').value = user.role;
+        form.querySelector('[name="status"]').value = user.status;
+
+        new bootstrap.Modal(document.getElementById('editUserModal')).show();
+    } catch (error) {
+        console.error('Error fetching user data:', error);
+        showError('Failed to fetch user data. Please try again.');
+    }
+}
+
+async function submitEditUser() {
+    const form = document.getElementById('editUserForm');
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch('/admin/updateUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        });
+
+        if (!response.ok) throw new Error('Failed to update user');
+
+        showSuccess('User updated successfully');
+        bootstrap.Modal.getInstance(document.getElementById('editUserModal')).hide();
+        loadContent('users');
+    } catch (error) {
+        console.error('Error updating user:', error);
+        showError('Failed to update user. Please try again.');
+    }
+}
+
+// Delete user functionality
+async function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+
+    try {
+        const response = await fetch(`/admin/deleteUser/${userId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) throw new Error('Failed to delete user');
+
+        showSuccess('User deleted successfully');
+        loadContent('users');
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        showError('Failed to delete user. Please try again.');
+    }
+}
+
+// Helper function to update users table
+function updateUsersTable(users) {
+    const tbody = document.querySelector('table tbody');
+    tbody.innerHTML = users.map(user => `
+        <tr>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>
+                <span class="badge bg-${user.role === 'admin' ? 'danger' : 
+                                    user.role === 'farmer' ? 'success' : 
+                                    'primary'}">
+                    ${user.role}
+                </span>
+            </td>
+            <td>
+                <span class="badge bg-${user.status === 'active' ? 'success' : 
+                                    user.status === 'inactive' ? 'warning' : 
+                                    'danger'}">
+                    ${user.status}
+                </span>
+            </td>
+            <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+            <td>
+                <button class="btn btn-sm btn-info" onclick="editUser('${user._id}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser('${user._id}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+</script> 
